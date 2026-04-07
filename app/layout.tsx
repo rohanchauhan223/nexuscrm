@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   description: 'Full Stack CRM built with Next.js and Supabase',
 }
 
+export const dynamic = 'force-static'
+
 export default function RootLayout({
   children,
 }: {
