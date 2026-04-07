@@ -4,23 +4,23 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-static'
 
-interface StatCard {
-  icon: string
-  title: string
-  value: string | number
-  change: string
-  color: string
+interface UserState {
+  name: string
+  email: string
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<UserState | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
       const supabase = getSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      if (user) {
+        setUser({ name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User', email: user.email || '' })
+      }
       setLoading(false)
     }
     getUser()
@@ -34,164 +34,343 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-cyan-400"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <p className="text-slate-500 text-sm">Loading dashboard...</p>
+        </div>
       </div>
     )
   }
 
-  const statsData: StatCard[] = [
-    {
-      icon: '👥',
-      title: 'Total Contacts',
-      value: 2659,
-      change: '+15%',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: '📅',
-      title: 'New Appointments',
-      value: 291,
-      change: '+20%',
-      color: 'from-green-500 to-emerald-500'
-    },
-    {
-      icon: '💰',
-      title: 'Total Revenue',
-      value: '$45,890',
-      change: '+8%',
-      color: 'from-purple-500 to-pink-500'
-    },
-    {
-      icon: '⭐',
-      title: 'Client Satisfaction',
-      value: '98%',
-      change: '+2%',
-      color: 'from-orange-500 to-amber-500'
-    },
+  const stats = [
+    { label: 'Total Revenue', value: '$45,890', change: '+12.5%', trend: 'up', icon: '💰' },
+    { label: 'Active Projects', value: '24', change: '+3', trend: 'up', icon: '📁' },
+    { label: 'Total Clients', value: '1,284', change: '+8.2%', trend: 'up', icon: '👥' },
+    { label: 'Pending Tasks', value: '17', change: '-5', trend: 'down', icon: '✓' },
   ]
 
-  const recentActivities = [
-    { name: 'John Anderson', action: 'Created new contact', time: '2 hours ago', avatar: '👨' },
-    { name: 'Sarah Mitchell', action: 'Scheduled appointment', time: '4 hours ago', avatar: '👩' },
-    { name: 'Mike Johnson', action: 'Updated contact info', time: '1 day ago', avatar: '👨' },
+  const activities = [
+    { user: 'Sarah Mitchell', action: 'Created new project', time: '2 min ago', avatar: 'SM' },
+    { user: 'John Anderson', action: 'Completed milestone', time: '1 hour ago', avatar: 'JA' },
+    { user: 'Mike Johnson', action: 'Added new client', time: '3 hours ago', avatar: 'MJ' },
+    { user: 'Emily Chen', action: 'Updated contract', time: '5 hours ago', avatar: 'EC' },
+  ]
+
+  const tasks = [
+    { title: 'Review Q2 reports', status: 'pending', due: 'Today' },
+    { title: 'Client meeting with Acme', status: 'upcoming', due: 'Tomorrow' },
+    { title: 'Update CRM pipeline', status: 'pending', due: 'This week' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-slate-700/50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <div>
-              <h1 className="text-white font-bold text-xl">NexusCRM</h1>
-              <p className="text-slate-400 text-xs">Dashboard</p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sidebar - Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-50 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="h-16 flex items-center px-6 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">N</span>
+              </div>
+              <span className="font-semibold text-slate-800">NexusCRM</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-300 text-sm hidden sm:inline">
-              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-lg"
-            >
-              Logout
-            </button>
+
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {[
+              { name: 'Dashboard', icon: '📊', active: true },
+              { name: 'Projects', icon: '📁', active: false },
+              { name: 'Team', icon: '👥', active: false },
+              { name: 'Clients', icon: '👤', active: false },
+              { name: 'Analytics', icon: '📈', active: false },
+              { name: 'Settings', icon: '⚙️', active: false },
+            ].map((item) => (
+              <button
+                key={item.name}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${item.active ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                {item.name}
+              </button>
+            ))}
+          </nav>
+
+          {/* User Profile */}
+          <div className="p-4 border-t border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold text-sm">
+                {user?.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-800 truncate">{user?.name}</p>
+                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8 animate-fade-in">
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome Back! 👋</h2>
-          <p className="text-slate-400">Here's your CRM performance overview</p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statsData.map((stat, index) => (
-            <div
-              key={index}
-              className="group relative overflow-hidden rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700/50 hover:border-slate-600/80 p-6 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-700/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`text-3xl`}>{stat.icon}</div>
-                  <span className="text-green-400 text-sm font-semibold">{stat.change}</span>
-                </div>
-                <h3 className="text-slate-400 text-sm font-medium mb-1">{stat.title}</h3>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
+      <main className="lg:pl-64">
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-30 bg-slate-50/80 backdrop-blur-md border-b border-slate-200">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+            {/* Left: Title + Mobile Toggle */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 text-slate-500 hover:text-slate-700"
+              >
+                ☰
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-slate-800">Dashboard</h1>
+                <p className="text-xs text-slate-500 hidden sm:block">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                </p>
               </div>
-              <div className={`absolute -bottom-1 -right-1 w-20 h-20 bg-gradient-to-br ${stat.color} opacity-10 rounded-full blur-xl`}></div>
             </div>
-          ))}
-        </div>
 
-        {/* Charts and Activity Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Activity Chart */}
-          <div className="lg:col-span-2 rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700/50 p-6 hover:border-slate-600/80 transition-all duration-300">
-            <h3 className="text-white font-bold text-lg mb-4">📈 Activity Overview</h3>
-            <div className="flex items-end justify-between h-48 gap-2">
-              {[65, 45, 75, 55, 85, 60, 70].map((height, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div
-                    className="w-full bg-gradient-to-t from-purple-500 to-cyan-400 rounded-t-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200"
-                    style={{ height: `${height * 2}px` }}
-                  ></div>
-                  <span className="text-slate-400 text-xs mt-2">D{index + 1}</span>
-                </div>
-              ))}
+            {/* Center: Search */}
+            <div className="hidden md:flex flex-1 max-w-md mx-8">
+              <div className="relative w-full">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔎</span>
+                <input
+                  type="text"
+                  placeholder="Search projects, clients..."
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Quick Stats Sidebar */}
-          <div className="rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700/50 p-6 hover:border-slate-600/80 transition-all duration-300">
-            <h3 className="text-white font-bold text-lg mb-4">🎯 Quick Stats</h3>
-            <div className="space-y-4">
-              {[
-                { label: 'Conversion', value: '12.5%', icon: '📊' },
-                { label: 'Engagement', value: '87%', icon: '💬' },
-                { label: 'Growth', value: '23%', icon: '📈' },
-              ].map((stat, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors duration-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{stat.icon}</span>
-                    <span className="text-slate-300 text-sm">{stat.label}</span>
-                  </div>
-                  <span className="text-white font-bold text-sm">{stat.value}</span>
-                </div>
-              ))}
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3">
+              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+                🔔
+              </button>
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Recent Activity */}
-        <div className="mt-6 rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700/50 p-6 hover:border-slate-600/80 transition-all duration-300">
-          <h3 className="text-white font-bold text-lg mb-4">👥 Recent Activity</h3>
-          <div className="space-y-3">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors duration-200 group cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="text-2xl">{activity.avatar}</div>
-                  <div>
-                    <p className="text-white font-medium group-hover:text-cyan-400 transition-colors">{activity.name}</p>
-                    <p className="text-slate-400 text-sm">{activity.action}</p>
-                  </div>
+        {/* Dashboard Content */}
+        <div className="p-4 sm:p-6 space-y-6">
+          {/* Welcome Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name.split(' ')[0]} 👋</h2>
+            <p className="text-slate-500 mt-1">Here's what's happening with your business today.</p>
+          </div>
+
+          {/* Stats Grid - Section A */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-2xl">{stat.icon}</span>
+                  <span
+                    className={`text-xs font-medium px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}
+                  >
+                    {stat.change}
+                  </span>
                 </div>
-                <span className="text-slate-400 text-xs">{activity.time}</span>
+                <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
+                <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
+
+          {/* Section B: Chart + Quick Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Chart Area */}
+            <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-800">Revenue Overview</h3>
+                  <p className="text-sm text-slate-500">Monthly revenue trend</p>
+                </div>
+                <select className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none">
+                  <option>Last 6 months</option>
+                  <option>Last year</option>
+                </select>
+              </div>
+              <div className="flex items-end gap-3 h-48">
+                {[65, 45, 75, 55, 85, 60].map((h, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div
+                      className="w-full bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-t-lg transition-all hover:from-indigo-600 hover:to-indigo-500"
+                      style={{ height: `${h}%` }}
+                    />
+                    <span className="text-xs text-slate-500">
+                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Insights Sidebar */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <h3 className="text-base font-semibold text-slate-800 mb-4">Quick Insights</h3>
+              <div className="space-y-4">
+                {[
+                  { label: 'Conversion Rate', value: '12.5%', icon: '📊', color: 'text-blue-600' },
+                  { label: 'Avg Deal Size', value: '$3,240', icon: '💵', color: 'text-green-600' },
+                  { label: 'Win Rate', value: '68%', icon: '🎯', color: 'text-indigo-600' },
+                ].map((insight, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{insight.icon}</span>
+                      <span className="text-sm text-slate-600">{insight.label}</span>
+                    </div>
+                    <span className={`text-sm font-semibold ${insight.color}`}>{insight.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Section C: Recent Activity + Tasks */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-semibold text-slate-800">Recent Activity</h3>
+                <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View all</button>
+              </div>
+              <div className="space-y-4">
+                {activities.map((act, idx) => (
+                  <div key={idx} className="flex items-start gap-4">
+                    <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 text-sm font-medium flex-shrink-0">
+                      {act.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-800">
+                        <span className="font-medium">{act.user}</span> {act.action}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">{act.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tasks */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-semibold text-slate-800">Upcoming Tasks</h3>
+                <button className="h-8 w-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center hover:bg-indigo-100 transition-colors">
+                  +
+                </button>
+              </div>
+              <div className="space-y-3">
+                {tasks.map((task, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-2.5 w-2.5 rounded-full ${task.status === 'pending' ? 'bg-amber-400' : 'bg-indigo-400'}`}
+                      />
+                      <span className="text-sm text-slate-700">{task.title}</span>
+                    </div>
+                    <span className="text-xs text-slate-500">{task.due}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Section D: Team + Project Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Team Members */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-semibold text-slate-800">Team Members</h3>
+                <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Manage</button>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { name: 'Sarah Mitchell', role: 'Project Lead', status: 'online', initials: 'SM' },
+                  { name: 'John Anderson', role: 'Developer', status: 'online', initials: 'JA' },
+                  { name: 'Mike Johnson', role: 'Designer', status: 'away', initials: 'MJ' },
+                  { name: 'Emily Chen', role: 'Marketing', status: 'offline', initials: 'EC' },
+                ].map((member, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="h-10 w-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center text-indigo-600 text-sm font-medium">
+                          {member.initials}
+                        </div>
+                        <span
+                          className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${member.status === 'online' ? 'bg-green-500' : member.status === 'away' ? 'bg-amber-400' : 'bg-slate-300'}`}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{member.name}</p>
+                        <p className="text-xs text-slate-500">{member.role}</p>
+                      </div>
+                    </div>
+                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                      ⋯
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Project Progress */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-semibold text-slate-800">Project Progress</h3>
+                <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View all</button>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { name: 'Website Redesign', progress: 75, due: 'Due in 5 days' },
+                  { name: 'Mobile App v2.0', progress: 45, due: 'Due in 12 days' },
+                  { name: 'CRM Integration', progress: 90, due: 'Due tomorrow' },
+                  { name: 'Marketing Campaign', progress: 30, due: 'Due in 3 weeks' },
+                ].map((project, idx) => (
+                  <div key={idx}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">{project.name}</span>
+                      <span className="text-xs text-slate-500">{project.due}</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full transition-all"
+                        style={{ width: `${project.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
