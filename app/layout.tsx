@@ -14,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: 'system-ui, sans-serif' }}>
+      <head>
+        <script src="https://cdn.tailwindcss.com" />
+      </head>
+      <body className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased">
         {children}
       </body>
     </html>
