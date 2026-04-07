@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '../../lib/supabase/client'
+import { createClient } from '../../../lib/supabase/client'
+
+export const dynamic = 'force-static'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -18,7 +20,7 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/login'
+    window.location.href = '/'
   }
 
   if (loading) {
@@ -34,6 +36,7 @@ export default function DashboardPage() {
         </div>
         <p style={{ color: '#666', marginTop: '8px' }}>Welcome, {user?.email}</p>
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
           <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>Customers</h3>
