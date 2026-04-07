@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-static'
 
@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
+    const supabase = getSupabaseClient()
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
