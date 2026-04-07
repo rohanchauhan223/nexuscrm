@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-static'
 
@@ -10,7 +10,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const getUser = async () => {
-      const supabase = createClient()
+      const supabase = getSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       setLoading(false)
@@ -19,7 +19,7 @@ export default function DashboardPage() {
   }, [])
 
   const handleLogout = async () => {
-    const supabase = createClient()
+    const supabase = getSupabaseClient()
     await supabase.auth.signOut()
     window.location.href = '/'
   }
